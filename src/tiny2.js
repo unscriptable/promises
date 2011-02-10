@@ -11,14 +11,15 @@ function Promise() {
 			safe: {
 				then: function safeThen(resolve, reject) {
 					promise.then(resolve, reject);
+					return this;
 				}
 			}
 		};
 
 	function complete(type, result) {
 		promise.then = type === 'reject'
-			? function(resolve, reject) { reject(result); }
-			: function(resolve)         { resolve(result); };
+			? function(resolve, reject) { reject(result); return this; }
+			: function(resolve)         { resolve(result); return this; };
 
 		promise.resolve = promise.reject = function() { throw new Error("Promise already completed"); };
 
