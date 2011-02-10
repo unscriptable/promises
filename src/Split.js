@@ -1,39 +1,40 @@
-// This promise is tiny. It's also fast.
-// There are a few major problems with this promise that keep it from
-// being useful outside of a constrained environment:
-// 1. It modifies it's own public API:
-//    The then(), resolve(), and reject() methods are rewritten when the promise
-//    is completed (i.e. resolved or rejected). There's nothing inherently wrong
-//    with this unless some other code is overriding or hijacking the public 
-//    methods (in which case, they'd be overriding the obsolete methods).
-// 2. It doesn't distinguish between the "front end" API and the "back end" API:
-//    If some other code decided to call our reject() method, it could. We would
-//    typically want to hide our back end API from outside code.
-// But if you're looking for the tiniest implementation of a promise, this is
-// about as small as you're going to get (in terms of LOC).
-// This promise is a copy from my gist at https://gist.github.com/814052
+// This promise is split into a back-end and front-end api.
+// It's a bit more robust than tiny.js's Promise because:
+// 1. It implements a front-end cancel() method.
+// 2. It doesn't modify its front-end API when completed.
+// 3. Outside code can't manipulate the resolved value (each
+//    then() call has a protected reference to the resolved value).
+// 4. It implements an onProgress handler.
 
 function Promise () {
+
+	var self = this;
+
 	this._thens = [];
+
+	// this is the front-end API. Hand this off to outside code:
+	this.promise = {
+
+		then: function (onResolve, onReject, onProgress) {
+			// capture calls to then()
+			self._then(onResolve, onReject, onProgress);
+			return this;
+		},
+
+		// This promise implements a cancel() front end API that calls all
+		// of the onReject() callbacks (aka a "cancelable promise").
+		cancel: function (reason) {
+			self._cancel(reason);
+			return this;
+		}
+
+	};
+
 }
 
+(function () {
+
 Promise.prototype = {
-
-	/* This is the "front end" API. */
-
-	// then(onResolve, onReject): Code waiting for this promise uses the
-	// then() method to be notified when the promise is complete. There
-	// are two completion callbacks: onReject and onResolve. A more
-	// robust promise implementation will also have an onProgress handler.
-	then: function (onResolve, onReject) {
-		// capture calls to then()
-		this._thens.push({ resolve: onResolve, reject: onReject });
-		return this;
-	},
-
-	// Some promise implementations also have a cancel() front end API that
-	// calls all of the onReject() callbacks (aka a "cancelable promise").
-	// cancel: function (reason) {},
 
 	/* This is the "back end" API. */
 
@@ -50,26 +51,56 @@ Promise.prototype = {
 	// when reject() is called and are passed the exception parameter.
 	reject: function (ex) { this._complete('reject', ex); },
 
-	// Some promises may have a progress handler. The back end API to signal
-	// a progress "event" has a single parameter. The contents of this 
+	// progress(data): The progress() method is the back end API to signal
+	// a progress "event". It has a single parameter. The contents of this 
 	// parameter could be just about anything and is specific to your
 	// implementation.
-	// progress: function (data) {},
+	progress: function (data) {
+		this._notify('progress', data);
+	},
 
 	/* "Private" methods. */
 
+	_then: function (res, rej, prog) {
+		// capture calls to then()
+		this._thens.push({ resolve: res, reject: rej, progress: prog });
+	},
+
+	_cancel: function (reason) {
+		this.reject(new Error(reason || 'Promise canceled.'));
+	},
+
 	_complete: function (which, arg) {
 		// switch over to sync then()
-		this.then = which === 'resolve' ?
-			function (resolve, reject) { resolve && resolve(arg); return this; } :
-			function (resolve, reject) { reject && reject(arg); return this; };
+		this._then = which === 'resolve' ?
+			function (resolve, reject) { resolve && resolve(protect(arg)); } :
+			function (resolve, reject) { reject && reject(arg); };
 		// disallow multiple calls to resolve or reject
-		this.resolve = this.reject = 
+		this.resolve = this.reject = this._cancel =
 			function () { throw new Error('Promise already completed.'); };
 		// complete all waiting (async) then()s
-		var aThen, i = 0;
-		while (aThen = this._thens[i++]) { aThen[which] && aThen[which](arg); }
+		this._notify(which, arg);
 		delete this._thens;
+	},
+
+	_notify: function (which, arg) {
+		// notify all waiting (async) then()s
+		var aThen, i = 0;
+		while (aThen = this._thens[i++]) {
+			aThen[which] && aThen[which](protect(arg)); 
+		}
 	}
 
+
 };
+
+// this is a Crockford/Cornford beget
+function F () {}
+function protect (obj) {
+	F.prototype = obj;
+	var safe = new F();
+	delete F.prototype;
+	return safe;
+}
+
+}());
