@@ -1,3 +1,18 @@
+// This promise is tiny. It's also fast.
+// There are a few major problems with this promise that keep it from
+// being useful outside of a constrained environment:
+// 1. It modifies it's own public API:
+//    The then(), resolve(), and reject() methods are rewritten when the promise
+//    is completed (i.e. resolved or rejected). There's nothing inherently wrong
+//    with this unless some other code is overriding or hijacking the public 
+//    methods (in which case, they'd be overriding the obsolete methods).
+// 2. It doesn't distinguish between the "front end" API and the "back end" API:
+//    If some other code decided to call our reject() method, it could. We would
+//    typically want to hide our back end API from outside code.
+// But if you're looking for the tiniest implementation of a promise, this is about
+// as small as you're going to get (in terms of LOC).
+// This promise is a copy from my gist at https://gist.github.com/814052
+
 function Promise () {
 	this._thens = [];
 }
