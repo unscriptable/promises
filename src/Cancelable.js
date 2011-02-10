@@ -4,7 +4,7 @@
 function makeCancelable (promise) {
 
 	// add the function to the front-end API, if it's separate
-	(promise.safe ? promise.safe : promise).cancel = function cancel () {
+	(promise.safe || promise).cancel = function cancel () {
 		try {
 			// reject this promise
 			promise.reject(new Error('Promise canceled.'));
