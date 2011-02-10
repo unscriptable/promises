@@ -35,6 +35,7 @@ function makeAsync (promise) {
 	// completed, but that's ok since we no longer need them to be async.
 	promise.resolve = makeAsync(promise.resolve, finalize);
 	promise.reject = makeAsync(promise.reject, finalize);
+	promise.progress && (promise.progress = makeAsync(promise.progress));
 
 	// initially, then() will just call the original then()
 	promise.then = function () { prevThen.apply(this, arguments); };
