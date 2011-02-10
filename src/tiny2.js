@@ -1,6 +1,6 @@
 // Another tiny promise using all "privileged" methods (a Crockfordism
 // for saying all of the methods are created in the constructor.)
-// This was lifted directly from a git by Brian Cavalier:
+// This was modified slightly from a gist by Brian Cavalier:
 // https://gist.github.com/814318
 function Promise() {
 	var callbacks = [],
@@ -40,4 +40,4 @@ function Promise() {
 	}
 
 	return promise;
-};
+}
