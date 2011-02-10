@@ -28,6 +28,7 @@ Promise.prototype = {
 	then: function (onResolve, onReject) {
 		// capture calls to then()
 		this._thens.push({ resolve: onResolve, reject: onReject });
+		return this;
 	},
 
 	// Some promise implementations also have a cancel() front end API that
@@ -60,8 +61,8 @@ Promise.prototype = {
 	_complete: function (which, arg) {
 		// switch over to sync then()
 		this.then = which === 'resolve' ?
-			function (resolve, reject) { resolve && resolve(arg); } :
-			function (resolve, reject) { reject && reject(arg); };
+			function (resolve, reject) { resolve && resolve(arg); return this; } :
+			function (resolve, reject) { reject && reject(arg); return this; };
 		// disallow multiple calls to resolve or reject
 		this.resolve = this.reject = 
 			function () { throw new Error('Promise already completed.'); };
