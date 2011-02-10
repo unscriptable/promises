@@ -2,7 +2,7 @@
 // promises. It's so simple, you could use the tiny.js
 // or tiny2.js implementations.
 
-function imageUploader (src) {
+function imageLoader (src) {
 	var promise = new Promise(),
 		img = document.createElement('img');
 	img.onload = function () { 
@@ -13,11 +13,11 @@ function imageUploader (src) {
 	};
 	img.src = src;
 	// if you're using tiny2.js, return promise.safe;
-	return promise;
+	return promise.safe || promise;
 }
 
 // example usage:
-imageUploader('http://google.com/favicon.ico').then(
+imageLoader('http://google.com/favicon.ico').then(
 	function gotIt (img) {
 		document.body.appendChild(img);
 	},
