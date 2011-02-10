@@ -9,8 +9,8 @@
 // 2. It doesn't distinguish between the "front end" API and the "back end" API:
 //    If some other code decided to call our reject() method, it could. We would
 //    typically want to hide our back end API from outside code.
-// But if you're looking for the tiniest implementation of a promise, this is about
-// as small as you're going to get (in terms of LOC).
+// But if you're looking for the tiniest implementation of a promise, this is
+// about as small as you're going to get (in terms of LOC).
 // This promise is a copy from my gist at https://gist.github.com/814052
 
 function Promise () {
@@ -37,21 +37,22 @@ Promise.prototype = {
 	/* This is the "back end" API. */
 
 	// resolve(resolvedValue): The resolve() method is called when a promise
-	// is resolved (duh). The resolved value (if any) is passed by the resolver
-	// to this method. All waiting onResolve callbacks are called
+	// is resolved (duh). The resolved value (if any) is passed by the
+	// resolver to this method. All waiting onResolve callbacks are called
 	// and any future ones are, too, each being passed the resolved value.
 	resolve: function (val) { this._complete('resolve', val); },
 
 	// reject(exception): The reject() method is called when a promise cannot
-	// be resolved. Typically, you'd pass an exception as the single parameter,
-	// but any other argument, including none at all, is acceptable.
-	// All waiting and all future onReject callbacks are called when reject()
-	// is called and are passed the exception parameter.
+	// be resolved. Typically, you'd pass an exception as the single 
+	// parameter, but any other argument, including none at all, is 
+	// acceptable. All waiting and all future onReject callbacks are called 
+	// when reject() is called and are passed the exception parameter.
 	reject: function (ex) { this._complete('reject', ex); },
 
-	// Some promises may have a progress handler. The back end API to signal a
-	// progress "event" has a single parameter. The contents of this parameter
-	// could be just about anything and is specific to your implementation.
+	// Some promises may have a progress handler. The back end API to signal
+	// a progress "event" has a single parameter. The contents of this 
+	// parameter could be just about anything and is specific to your
+	// implementation.
 	// progress: function (data) {},
 
 	/* "Private" methods. */
